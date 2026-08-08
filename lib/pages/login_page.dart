@@ -2,6 +2,7 @@ import 'package:Wavelet/pages/initalpair/inital-pair_page.dart';
 import 'package:flutter/material.dart';
 import 'package:Wavelet/theme/colors.dart';
 import 'package:Wavelet/pages/signup_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key, required this.toggleTheme});
@@ -12,7 +13,78 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
+
+  //text controllers for email and password fields
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
   @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+  
+  //try logging in
+Future<void> _signIn() async {
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      if (!mounted) return;
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => InitialPair(
+            toggleTheme: () {},
+          ),
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _getAuthErrorMessage(e.code),
+          ),
+        ),
+      );
+    }
+  }
+
+  //get error msg
+  String _getAuthErrorMessage(String code) {
+  switch (code) {
+    case 'invalid-email':
+      return 'Please enter a valid email address.';
+
+    case 'user-not-found':
+      return 'No account exists with this email.';
+
+    case 'wrong-password':
+      return 'Incorrect password.';
+
+    case 'invalid-credential':
+      return 'Incorrect email or password.';
+
+    case 'too-many-requests':
+      return 'Too many attempts. Please try again later.';
+
+    case 'network-request-failed':
+      return 'Please check your internet connection.';
+
+    default:
+      return 'Something went wrong. Please try again.';
+  }
+}
+
+
+
+
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: WaveletColors.background(context),
@@ -76,6 +148,7 @@ class _LoginPageState extends State<LoginPage> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(44, 48, 44, 0.8),
                 child: TextField(
+                  controller: _emailController,
                   decoration: InputDecoration(
                     hintText: "Email address",
                     filled: true,
@@ -102,6 +175,7 @@ class _LoginPageState extends State<LoginPage> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(44, 16, 44, 0),
                 child: TextField(
+                  controller: _passwordController,
                   obscureText: true,
                   decoration: InputDecoration(
                     hintText: "Password",
@@ -145,11 +219,7 @@ class _LoginPageState extends State<LoginPage> {
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (_) => InitialPair(toggleTheme: () {
-                      
-                    },)));
-                  }, //change later<<
+                  onPressed: _signIn,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: WaveletColors.primaryButton(context),
                     foregroundColor: WaveletColors.primaryButtonText(context),

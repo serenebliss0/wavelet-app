@@ -1,35 +1,30 @@
-import 'package:Wavelet/theme/colors.dart';
 import 'package:flutter/material.dart';
+import 'package:Wavelet/theme/colors.dart';
 
-  enum DeviceStatus {
-    offline,
-    idle,
-    playing
-  }
+enum DeviceStatus {
+  offline,
+  idle,
+  playing,
+}
 
-class HomeDeviceCard extends StatefulWidget {
-  HomeDeviceCard({
+class HomeDeviceCard extends StatelessWidget {
+  final String deviceName;
+  final String deviceModel;
+  final String volume;
+  final String songName;
+  final String artistName;
+  final DeviceStatus deviceStatus;
+
+  const HomeDeviceCard({
     super.key,
     required this.deviceName,
+    required this.deviceModel,
     required this.volume,
     required this.songName,
     required this.artistName,
-    required this.deviceStatus
-    
-    });
+    required this.deviceStatus,
+  });
 
-  @override
-  State<HomeDeviceCard> createState() => _HomeDeviceCardState();
-
-  String deviceName;
-  String volume;
-  String songName;
-  String artistName;
-  DeviceStatus deviceStatus;
-
-}
-
-class _HomeDeviceCardState extends State<HomeDeviceCard> {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -38,38 +33,98 @@ class _HomeDeviceCardState extends State<HomeDeviceCard> {
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: WaveletColors.border(context),
-          width: 0.8
-        )
+          width: 0.8,
+        ),
       ),
 
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.start,
-
         children: [
 
           Row(
             children: [
+
               Image.asset(
-                'assets/images/spk-temp,png',
+                'assets/images/spk-temp.png',
+                width: 56,
+                height: 56,
               ),
 
-              Column(
-                children: [
-                  Text(
-                    widget.deviceName,
-                    
-                  )
-                ],
-              )
+              const SizedBox(width: 12),
 
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+
+                    Text(
+                      deviceName,
+                      style: const TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+
+                    const SizedBox(height: 3),
+
+                    Text(
+                      deviceModel,
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 11,
+                        color: WaveletColors.textDisabled(context),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const Icon(
+                Icons.chevron_right,
+                size: 20,
+              ),
 
             ],
-          )
+          ),
 
+          const SizedBox(height: 12),
 
-        ], //end of column
+          Text(
+            _statusText(),
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 11,
+              color: WaveletColors.textDisabled(context),
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          Text(
+            '$songName — $artistName',
+            style: const TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+
+        ],
       ),
     );
+  }
+
+  String _statusText() {
+    switch (deviceStatus) {
+      case DeviceStatus.offline:
+        return 'Offline';
+
+      case DeviceStatus.idle:
+        return 'Idle • Volume $volume';
+
+      case DeviceStatus.playing:
+        return 'Playing • Volume $volume';
+    }
   }
 }

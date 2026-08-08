@@ -1,6 +1,11 @@
+import 'package:Wavelet/pages/initalpair/inital-pair_page.dart';
 import 'package:Wavelet/pages/login_page.dart';
 import 'package:flutter/material.dart';
 import 'package:Wavelet/theme/colors.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:Wavelet/services/user_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key, required this.toggleTheme});
@@ -11,7 +16,145 @@ class SignupPage extends StatefulWidget {
 }
 
 class _SignupPageState extends State<SignupPage> {
+
+//text controllers
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  final UserService _userService = UserService();
+
   @override
+  void dispose() {
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _signUp() async {
+    try {
+      final credential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      final user = credential.user;
+
+      if (user != null) {
+        await user.updateDisplayName(
+          _nameController.text.trim(),
+        );
+
+        await _userService.createUserProfile(
+          uid: user.uid,
+          name: _nameController.text.trim(),
+          email: _emailController.text.trim(),
+        );
+      }
+
+      if (!mounted) return;
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => InitialPair(
+            toggleTheme: () {},
+          ),
+        ),
+      );
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _getAuthErrorMessage(e.code),
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            // 'Something went wrong while creating your account.',
+               'Signup error: $e',
+          ),
+        ),
+      );
+    }
+  }
+
+  String _getAuthErrorMessage(String code) {
+    switch (code) {
+      // Login
+      case 'invalid-email':
+        return 'Please enter a valid email address.';
+
+      case 'user-not-found':
+        return 'No account exists with this email.';
+
+      case 'wrong-password':
+        return 'Incorrect password.';
+
+      case 'invalid-credential':
+        return 'Incorrect email or password.';
+
+      // Signup
+      case 'email-already-in-use':
+        return 'An account already exists with this email.';
+
+      case 'weak-password':
+        return 'Your password is too weak.';
+
+      // General
+      case 'too-many-requests':
+        return 'Too many attempts. Please try again later.';
+
+      case 'network-request-failed':
+        return 'Please check your internet connection.';
+
+      case 'operation-not-allowed':
+        return 'Email and password sign-in is not enabled.';
+
+      default:
+        return 'Something went wrong. Please try again.';
+    }
+  }
+
+  //test function
+// Future<void> _testFirestore() async {
+//   try {
+//     print('Testing Firestore...');
+
+//     final user = FirebaseAuth.instance.currentUser;
+
+//     if (user == null) {
+//       print('No authenticated user!');
+//       return;
+//     }
+
+//     print('Current UID: ${user.uid}');
+
+//     await FirebaseFirestore.instance
+//         .collection('users')
+//         .doc(user.uid)
+//         .set({
+//       'name': 'Firestore Test',
+//       'email': user.email,
+//       'createdAt': FieldValue.serverTimestamp(),
+//     });
+
+//     print('Firestore write successful!');
+//   } catch (e) {
+//     print('FIRESTORE WRITE ERROR: $e');
+//   }
+// }
+
+
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: WaveletColors.background(context),
@@ -51,6 +194,13 @@ class _SignupPageState extends State<SignupPage> {
                 ),
             )
             ),
+
+            // //test button
+            // //delete this later
+            // ElevatedButton(
+            //     onPressed: _testFirestore,
+            //     child: const Text('Test Firestore'),
+            //   ),
         
         //text header
             Container(
@@ -76,6 +226,7 @@ class _SignupPageState extends State<SignupPage> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(44, 48, 44, 16),
                 child: TextField(
+                  controller: _nameController,
                   decoration: InputDecoration(
                     hintText: "Your name",
                     filled: true,
@@ -102,6 +253,7 @@ class _SignupPageState extends State<SignupPage> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(44, 0, 44, 0.8),
                 child: TextField(
+                  controller: _emailController,
                   decoration: InputDecoration(
                     hintText: "Email address",
                     filled: true,
@@ -128,6 +280,7 @@ class _SignupPageState extends State<SignupPage> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(44, 16, 44, 0),
                 child: TextField(
+                  controller: _passwordController,
                   obscureText: true,
                   decoration: InputDecoration(
                     hintText: "Password",
@@ -171,7 +324,7 @@ class _SignupPageState extends State<SignupPage> {
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: ElevatedButton(
-                  onPressed: () {}, //change later<<
+                  onPressed: _signUp,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: WaveletColors.primaryButton(context),
                     foregroundColor: WaveletColors.primaryButtonText(context),
