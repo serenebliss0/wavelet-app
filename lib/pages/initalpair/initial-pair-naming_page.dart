@@ -1,5 +1,7 @@
 import 'package:Wavelet/theme/colors.dart';
+import 'package:Wavelet/util/five_step_navigation.dart';
 import 'package:flutter/material.dart';
+import 'package:Wavelet/util/function/ble_manager.dart';
 
 class NameDevicePage extends StatefulWidget {
   const NameDevicePage({
@@ -15,6 +17,57 @@ class NameDevicePage extends StatefulWidget {
 }
 
 class _NameDevicePageState extends State<NameDevicePage> {
+
+  final TextEditingController _nameController = TextEditingController();
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
+
+    Future<void> _finishSetup() async {
+    final name = _nameController.text.trim();
+
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please give your Wavelet a name'),
+        ),
+      );
+      return;
+    }
+
+    try {
+      debugPrint('[SETUP] Setting Wavelet name: $name');
+
+      await bleManager.setDeviceName(name);
+
+      debugPrint('[SETUP] Wavelet name saved');
+
+      if (!mounted) return;
+
+      // For now, just show success.
+      // We'll replace this with the actual post-setup flow.
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Wavelet setup complete!'),
+        ),
+      );
+
+    } catch (e) {
+      debugPrint('[SETUP] Failed to set Wavelet name: $e');
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Could not save Wavelet name'),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -22,12 +75,13 @@ class _NameDevicePageState extends State<NameDevicePage> {
       backgroundColor: WaveletColors.background(context),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        // mainAxisAlignment: MainAxisAlignment.start,
 
         children: [
 
           //name your wavelet
           Padding(
-            padding: const EdgeInsets.fromLTRB(32, 78, 173, 6),
+            padding: const EdgeInsets.fromLTRB(32, 78, 10, 6),
 
             child: Text(
               "Name your wavelet",
@@ -55,13 +109,15 @@ class _NameDevicePageState extends State<NameDevicePage> {
           ),
 
           //speaker icon
-          Container(
-            width: 120,
-            height: 120,
-
-            child: Center(
-              child: Image.asset(
-                'assets/images/spk-temp.png'
+          Center(
+            child: Container(
+              width: 342,
+              height: 120,
+            
+              child: Center(
+                child: Image.asset(
+                  'assets/images/spk-temp.png'
+                ),
               ),
             ),
           ),
@@ -71,7 +127,8 @@ class _NameDevicePageState extends State<NameDevicePage> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(36, 33, 44, 24),
                 child: TextField(
-                  obscureText: true,
+                  controller: _nameController,
+                  obscureText: false,
                   decoration: InputDecoration(
                     hintText: "Give your wavelet a name",
                     filled: true,
@@ -105,6 +162,35 @@ class _NameDevicePageState extends State<NameDevicePage> {
                 ),
               ),
           ),
+
+          //add preset rooms here
+
+          SizedBox(height: 352,),
+
+          Center(child: FiveStepNavigation(position: 5)),
+
+          SizedBox(height: 24,),
+
+                    //signin button
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: ElevatedButton(
+                  onPressed: _finishSetup,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: WaveletColors.primaryButton(context),
+                    foregroundColor: WaveletColors.primaryButtonText(context),
+                    minimumSize: Size(294, 52),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: Text("Finish Setup"),
+                ),
+              ),
+            ),
+
+
 
 
 
