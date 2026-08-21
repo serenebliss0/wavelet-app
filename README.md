@@ -1,4 +1,3 @@
-
 <p align="center">
   <a href="https://github.com/serenebliss0/wavelet">
     <img
@@ -29,7 +28,6 @@ Wavelet is the official companion application for the **Wavelet Smart Speaker** 
 
 It provides a seamless setup experience, device management, firmware updates, music control, and future smart-home integrations through a clean and modern interface.
 
-The app is built entirely with Flutter, allowing the same experience across Android, iOS, Windows, macOS and Linux.
 
 > The goal is simple:
 >
@@ -57,17 +55,17 @@ The app is built entirely with Flutter, allowing the same experience across Andr
 - QR Code onboarding
 - BLE discovery
 - Wi-Fi provisioning
-- Secure pairing tokens
+- Secure pairing tokens *(planned)*
 
 ---
 
-### Device Management
+### Device Management *(planned)*
 
 - Rename devices
 - View battery status
 - Connection status
 - Firmware version
-- Multiple speaker support *(planned)*
+- Multiple speaker support
 
 ---
 
@@ -84,7 +82,7 @@ The app is built entirely with Flutter, allowing the same experience across Andr
 ### Firmware
 
 - OTA Updates *(planned)*
-- Update progress
+- Update progress 
 - Release notes
 
 ---
@@ -97,11 +95,6 @@ The app is built entirely with Flutter, allowing the same experience across Andr
 
 ---
 
-## Architecture
-
-*(Replace with an actual architecture diagram later.)*
-
----
 
 ## Project Structure
 
@@ -147,7 +140,7 @@ flutter run
 
 - [x] QR pairing
 - [x] BLE discovery
-- [ ] Wi-Fi provisioning
+- [x] Wi-Fi provisioning
 - [ ] Device registration
 - [ ] Device dashboard
 - [ ] Music controls
