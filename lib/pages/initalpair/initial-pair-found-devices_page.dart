@@ -94,6 +94,7 @@ class FoundDevices extends StatelessWidget {
           builder: (_) => MiniQrScanPage(
             toggleTheme: toggleTheme,
             pageStep: 4,
+            device: result.device,
 
             //deviceName: device,
           ),

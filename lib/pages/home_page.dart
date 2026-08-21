@@ -1,3 +1,4 @@
+import 'package:Wavelet/pages/initalpair/inital-pair_page.dart';
 import 'package:Wavelet/pages/initalpair/initial-pair-final_page.dart';
 import 'package:Wavelet/pages/login_page.dart';
 import 'package:Wavelet/util/home-device-list.dart';
@@ -207,37 +208,16 @@ final DeviceService _deviceService = DeviceService();
               ),
             ),
 
-            //test code
-            //remove later
-            ElevatedButton(
-    onPressed: () async {
-      try {
-        final device = WaveletDevice(
-          id: 'TEST_MINI_001',
-          model: 'mini',
-          name: 'Bedroom Mini',
-          color: 'blue',
-          firmwareVersion: '1.0.0',
-          pairedAt: DateTime.now(),
-        );
 
-        await _deviceService.addDevice(device);
+  //my devices list
+  Expanded(child: DeviceList()),
 
-        print('Device added successfully!');
-      } catch (e) {
-        print('DEVICE ERROR: $e');
-      }
-    },
-    child: const Text('Add Test Mini'),
-  ),
-//remove laterrrr
+  //test btn
 
-
-  //replace later
-
-  //test my devices
-
-  Expanded(child: DeviceList())
+    ElevatedButton(onPressed: (){
+      Navigator.push(context, 
+      MaterialPageRoute(builder: (_) => InitialPair(toggleTheme: (){})));
+    }, child: Text('Go back to add device'))
 
 
 

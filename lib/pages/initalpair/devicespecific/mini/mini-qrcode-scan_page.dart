@@ -1,20 +1,21 @@
+import 'package:Wavelet/pages/initalpair/devicespecific/mini/mini-wifi-connect_page.dart';
 import 'package:Wavelet/util/five_step_navigation.dart';
+import 'package:Wavelet/util/function/ble_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:Wavelet/theme/colors.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 
 class MiniQrScanPage extends StatefulWidget {
   MiniQrScanPage({
     super.key, 
     required this.toggleTheme,
     required this.pageStep,
-    //required this.ssid,
-    //required this.password
-    
+    required this.device,
     });
 
   final VoidCallback toggleTheme;
+  final BluetoothDevice device;
   int pageStep;
   String ssid = "";
   String password = "";
@@ -25,9 +26,42 @@ class MiniQrScanPage extends StatefulWidget {
 
 class _MiniQrScanPageState extends State<MiniQrScanPage> {
   
+Future<void> _connectToWavelet() async {
+  try {
+    debugPrint(
+      '[BLE] Connecting to ${widget.device.platformName}...',
+    );
+
+    await bleManager.connect(widget.device);
+
+    debugPrint('[BLE] Wavelet BLE ready');
+
+    if (!mounted) return;
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => MiniWifiPage(
+          toggleTheme: widget.toggleTheme,
+          deviceName: widget.device.platformName,
+          pageStep: 4,
+          device: widget.device,
+        ),
+      ),
+    );
+
+  } catch (e) {
+    debugPrint('[BLE] Connection failed: $e');
+
+    if (!mounted) return;
+
+    _showError('Could not connect to your Wavelet');
+  }
+}
+
   bool _handled = false;
 
-  void _handleQr(String raw) {
+  Future<void> _handleQr(String raw) async {
     debugPrint('Scanned: $raw');
 
     final uri = Uri.tryParse(raw);
@@ -38,7 +72,7 @@ class _MiniQrScanPageState extends State<MiniQrScanPage> {
     }
 
     final model = uri.queryParameters['model'];
-    final id    = uri.queryParameters['id'];
+    final id = uri.queryParameters['id'];
     final token = uri.queryParameters['token'];
     final color = uri.queryParameters['color'];
 
@@ -47,14 +81,8 @@ class _MiniQrScanPageState extends State<MiniQrScanPage> {
     debugPrint('Token: $token');
     debugPrint('Color: $color');
 
-    // TODO: Start BLE scan and connect to this device
-
-    Navigator.pop(context, {
-      'model': model,
-      'id': id,
-      'token': token,
-      'color': color,
-    });
+    // Connect to the Wavelet
+    await _connectToWavelet();
   }
 
   void _showError(String message) {

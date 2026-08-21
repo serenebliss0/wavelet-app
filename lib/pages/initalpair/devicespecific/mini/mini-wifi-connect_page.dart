@@ -1,10 +1,16 @@
+import 'dart:async';
+
 import 'package:Wavelet/pages/initalpair/devicespecific/max/max-speaker-code_page.dart';
 import 'package:Wavelet/pages/initalpair/devicespecific/mini/mini-qrcode-scan_page.dart';
+import 'package:Wavelet/pages/initalpair/initial-pair-naming_page.dart';
 import 'package:Wavelet/util/five_step_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:Wavelet/theme/colors.dart';
 import 'package:wifi_scan/wifi_scan.dart';
 import 'package:wifi_iot/wifi_iot.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:Wavelet/util/function/ble_manager.dart';
+import 'package:wifi_scan/wifi_scan.dart';
 
 
 class MiniWifiPage extends StatefulWidget {
@@ -13,9 +19,11 @@ class MiniWifiPage extends StatefulWidget {
     required this.toggleTheme, 
     required this.deviceName,
     required this.pageStep,
+    required this.device
     });
 
   final VoidCallback toggleTheme;
+  final BluetoothDevice device;
   String deviceName;
   int pageStep;
 
@@ -34,18 +42,72 @@ class _MiniWifiPageState extends State<MiniWifiPage> {
   bool isScanning = false;
   final TextEditingController _passwordController = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
-    scanNetworks();
-    // button activates when password is typed
-    _passwordController.addListener(() {
-      setState(() => password = _passwordController.text);
+  bool isConnecting = false;
+  String? wifiStatus;
+  StreamSubscription<String>? _statusSubscription;
+
+  
+  
+
+@override
+void initState() {
+  super.initState();
+
+  scanNetworks();
+
+  _passwordController.addListener(() {
+    setState(() => password = _passwordController.text);
+  });
+
+  _statusSubscription = bleManager.statusStream.listen((status) {
+  debugPrint('[WIFI] Wavelet status: $status');
+
+  if (!mounted) return;
+
+  if (status == "WIFI_CONNECTING") {
+    setState(() {
+      isConnecting = true;
+      wifiStatus = status;
     });
   }
 
+  else if (status == "WIFI_CONNECTED") {
+    setState(() {
+      isConnecting = false;
+      wifiStatus = status;
+    });
+
+    debugPrint('[WIFI] Wavelet connected to Wi-Fi!');
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => NameDevicePage(
+          toggleTheme: widget.toggleTheme,
+        ),
+      ),
+    );
+  }
+
+  else if (status == "WIFI_FAILED") {
+    setState(() {
+      isConnecting = false;
+      wifiStatus = status;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Wavelet could not connect to Wi-Fi'),
+      ),
+    );
+  }
+});
+
+}
+
   @override
   void dispose() {
+    _statusSubscription?.cancel();
     _passwordController.dispose();
     super.dispose();
   }
@@ -73,6 +135,50 @@ class _MiniWifiPageState extends State<MiniWifiPage> {
     if (label == "Good")   return WaveletColors.warning(context);
     return WaveletColors.error(context);
   }
+
+  Future<void> _sendWifiCredentials() async {
+  if (selectedSSID == null || password.isEmpty) return;
+
+  setState(() {
+    isConnecting = true;
+    wifiStatus = "SENDING";
+  });
+
+  debugPrint('[WIFI] Sending credentials to Wavelet...');
+  debugPrint('[WIFI] SSID: $selectedSSID');
+
+  try {
+    await bleManager.sendWifiCredentials(
+      ssid: selectedSSID!,
+      password: password,
+    );
+
+    debugPrint('[WIFI] Credentials sent');
+
+    debugPrint('[WIFI] Telling Wavelet to connect...');
+
+    await bleManager.sendCommand("SET_WIFI");
+
+    debugPrint('[WIFI] SET_WIFI command sent');
+  } 
+  catch (e) {
+    debugPrint('[WIFI] Failed to send credentials: $e');
+
+    if (!mounted) return;
+
+    setState(() {
+      isConnecting = false;
+      wifiStatus = "SEND_FAILED";
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Could not send Wi-Fi credentials'),
+      ),
+    );
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -230,22 +336,12 @@ Expanded(
 Padding(
   padding: const EdgeInsets.fromLTRB(40, 16, 40, 24),
   child: ElevatedButton(
-    onPressed: networkSelected && password.isNotEmpty
-      ? () {
+    onPressed: networkSelected &&
+        password.isNotEmpty &&
+        !isConnecting
+    ? _sendWifiCredentials
+    : null, // null disables the button automatically
 
-          // send to speaker over BLE next
-          
-          Navigator.push(context, MaterialPageRoute(
-            //changes for each model
-            builder: (_) => MiniQrScanPage(
-              toggleTheme: widget.toggleTheme,
-              //ssid: selectedSSID!,
-              //password: password,
-              pageStep: 4,
-            ),
-          ));
-        }
-      : null, // null disables the button automatically
     style: ElevatedButton.styleFrom(
       backgroundColor: WaveletColors.primaryButton(context),
       foregroundColor: WaveletColors.primaryButtonText(context),
