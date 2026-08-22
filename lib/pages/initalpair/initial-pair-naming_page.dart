@@ -1,3 +1,4 @@
+import 'package:Wavelet/pages/initalpair/initial-pair-final_page.dart';
 import 'package:Wavelet/theme/colors.dart';
 import 'package:Wavelet/util/five_step_navigation.dart';
 import 'package:flutter/material.dart';
@@ -49,9 +50,13 @@ class _NameDevicePageState extends State<NameDevicePage> {
 
       // For now, just show success.
       // We'll replace this with the actual post-setup flow.
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Wavelet setup complete!'),
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => FinishedPairPage(
+            toggleTheme: () {},
+            userDeviceName: name,
+          ),
         ),
       );
 
@@ -171,7 +176,7 @@ class _NameDevicePageState extends State<NameDevicePage> {
 
           SizedBox(height: 24,),
 
-                    //signin button
+                    //finish button
             Center(
               child: Padding(
                 padding: const EdgeInsets.all(8.0),
