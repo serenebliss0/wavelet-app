@@ -2,6 +2,7 @@ import 'package:Wavelet/pages/initalpair/inital-pair_page.dart';
 import 'package:Wavelet/pages/initalpair/initial-pair-final_page.dart';
 import 'package:Wavelet/pages/login_page.dart';
 import 'package:Wavelet/util/home-device-list.dart';
+import 'package:Wavelet/util/now-playing-home.dart';
 import 'package:flutter/material.dart';
 import 'package:Wavelet/theme/colors.dart';
 
@@ -208,7 +209,11 @@ final DeviceService _deviceService = DeviceService();
               ),
             ),
 
-
+  Padding(
+    padding: const EdgeInsets.all(8.0),
+    child: NowPlayingCard(deviceName: "Mini", songArtist: "Lyn Lapid", songTitle: "poster boy", status: true),
+  ),
+  
   //my devices list
   Expanded(child: DeviceList()),
 

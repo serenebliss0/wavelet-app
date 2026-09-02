@@ -65,17 +65,14 @@ class _DeviceListState extends State<DeviceList> {
           },
 
           itemBuilder: (context, index) {
-
             final device = devices[index];
 
             return HomeDeviceCard(
               deviceName: device.name,
               deviceModel: 'Wavelet ${device.model}',
-
-              // TEMPORARY BLE VALUES
               volume: '0%',
               songName: 'Nothing playing',
-              artistName: '',
+              artistName: 'Lyn',
               deviceStatus: DeviceStatus.offline,
             );
           },
