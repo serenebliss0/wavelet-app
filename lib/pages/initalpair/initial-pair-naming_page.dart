@@ -46,6 +46,8 @@ class _NameDevicePageState extends State<NameDevicePage> {
 
       debugPrint('[SETUP] Wavelet name saved');
 
+      await bleManager.sendCommand('SETUP_COMPLETE'); //added this
+
       if (!mounted) return;
 
       // For now, just show success.
