@@ -1,7 +1,8 @@
 import 'package:Wavelet/pages/initalpair/devicespecific/max/max-wifi-connect_page.dart';
 import 'package:Wavelet/pages/initalpair/devicespecific/mini/mini-wifi-connect_page.dart';
 import 'package:Wavelet/pages/initalpair/devicespecific/mini/mini-qrcode-scan_page.dart';
-import 'package:Wavelet/pages/initalpair/devicespecific/name-wavelet_page.dart';
+import 'package:Wavelet/pages/initalpair/devicespecific/regular/regular-naming_page.dart';
+import 'package:Wavelet/pages/initalpair/initial-pair-naming_page.dart';
 import 'package:Wavelet/pages/initalpair/inital-pair-searching_page.dart';
 import 'package:Wavelet/pages/initalpair/initial-pair-final_page.dart';
 import 'package:Wavelet/util/device_card.dart';
@@ -11,76 +12,17 @@ import 'package:Wavelet/theme/colors.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:Wavelet/util/function/ble_scanner.dart';
 
-class FoundDevices extends StatelessWidget {
+class FoundDevices extends StatefulWidget {
   const FoundDevices({super.key, required this.toggleTheme, required this.devices});
   final VoidCallback toggleTheme;
 
   final List<ScanResult> devices;
 
-  // dummy devices for now, will be replaced with real BLE results
-  final List<Map<String, String>> mockDevices = const [
-    {
-      "name": "Wavelet Mini",
-      "model": "mini",
-      "signal": "Strong",
-      "image": "assets/images/spk-temp.png",
-      "color" : "pink"
-    },
-    {
-      "name": "Wavelet Regular",
-      "model": "regular",
-      "signal": "Good",
-      "image": "assets/images/spk-temp.png",
-      "color" : "yellow"
-    },
+  @override
+  State<FoundDevices> createState() => _FoundDevicesState();
+}
 
-    {
-      "name": "Wavelet Max",
-      "model": "max",
-      "signal": "Fair",
-      "image": "assets/images/spk-temp.png",
-      "color" : "white"
-    },
-
-        {
-      "name": "Wavelet Mini",
-      "model": "mini",
-      "signal": "Strong",
-      "image": "assets/images/spk-temp.png",
-      "color" : "pink"
-    },
-
-        {
-      "name": "Wavelet Mini",
-      "model": "mini",
-      "signal": "Strong",
-      "image": "assets/images/spk-temp.png",
-      "color" : "pink"
-    },
-    {
-      "name": "Wavelet Regular",
-      "model": "regular",
-      "signal": "Good",
-      "image": "assets/images/spk-temp.png",
-      "color" : "yellow"
-    },
-
-    {
-      "name": "Wavelet Max",
-      "model": "max",
-      "signal": "Fair",
-      "image": "assets/images/spk-temp.png",
-      "color" : "white"
-    },
-
-        {
-      "name": "Wavelet Mini",
-      "model": "mini",
-      "signal": "Strong",
-      "image": "assets/images/spk-temp.png",
-      "color" : "pink"
-    },
-  ];
+class _FoundDevicesState extends State<FoundDevices> {
 
   void handleDeviceTap(BuildContext context, ScanResult result) {
 
@@ -92,7 +34,7 @@ class FoundDevices extends StatelessWidget {
       case "mini":
         Navigator.push(context, MaterialPageRoute(
           builder: (_) => MiniQrScanPage(
-            toggleTheme: toggleTheme,
+            toggleTheme: widget.toggleTheme,
             pageStep: 4,
             device: result.device,
 
@@ -104,7 +46,7 @@ class FoundDevices extends StatelessWidget {
       case "max":
         Navigator.push(context, MaterialPageRoute(
           builder: (_) => MaxWifiPage(
-            toggleTheme: toggleTheme,
+            toggleTheme: widget.toggleTheme,
             deviceName: device.toString(),
             pageStep: 4,
           ),
@@ -112,16 +54,19 @@ class FoundDevices extends StatelessWidget {
         break;
 
       case "regular":
+      
         Navigator.push(context, MaterialPageRoute(
-          builder: (_) => NameDevicePage(
-            toggleTheme: toggleTheme,
-            deviceName: device.toString(),
-            model: model,
+          builder: (_) => RegularNameDevicePage(
+            toggleTheme: widget.toggleTheme,
+            device: result.device,
+            // deviceName: device.toString(),
+            // model: model,
           ),
         ));
         break;
     }
   }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -160,7 +105,7 @@ class FoundDevices extends StatelessWidget {
           // device list
           Expanded(
 
-            child: devices.isEmpty
+            child: widget.devices.isEmpty
               ? 
               //device list is empty: no devices found
               Center(
@@ -185,7 +130,7 @@ class FoundDevices extends StatelessWidget {
                           Navigator.pushReplacement(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => SearchPage(toggleTheme: toggleTheme),
+                              builder: (_) => SearchPage(toggleTheme: widget.toggleTheme),
                             ),
                           );
                         },
@@ -205,10 +150,10 @@ class FoundDevices extends StatelessWidget {
                 //value if devices found
               : ListView.separated(
                   padding: EdgeInsets.symmetric(horizontal: 24),
-                  itemCount: devices.length,
+                  itemCount: widget.devices.length,
                   separatorBuilder: (_, __) => SizedBox(height: 32),
                   itemBuilder: (context, index) {
-                    final result = devices[index];
+                    final result = widget.devices[index];
                     return DeviceCard(
                       deviceName: result.device.platformName,
                       deviceModel: BleScanner.extractModel(result.device.platformName),
@@ -234,7 +179,7 @@ class FoundDevices extends StatelessWidget {
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => SearchPage(toggleTheme: toggleTheme),
+                    builder: (_) => SearchPage(toggleTheme: widget.toggleTheme),
                   ),
                 );
               },
