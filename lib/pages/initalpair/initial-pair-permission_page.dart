@@ -6,7 +6,6 @@ import 'package:Wavelet/theme/colors.dart';
 
 import 'inital-pair-searching_page.dart';
 
-
 class InitialPairPermissions extends StatefulWidget {
   const InitialPairPermissions({super.key, required this.toggleTheme});
   final VoidCallback toggleTheme;
@@ -22,46 +21,78 @@ class _InitialPairPermissionsState extends State<InitialPairPermissions> {
   bool cameraGranted = false;
   bool locationGranted = false;
 
+  @override
+  void initState() {
+    super.initState();
+    _checkPermissions();
+  }
+
+  Future<void> _checkPermissions() async {
+    final bluetooth = await Permission.bluetoothConnect.status;
+    final scan = await Permission.bluetoothScan.status;
+    final camera = await Permission.camera.status;
+    final location = await Permission.location.status;
+    if (!mounted) return;
+    setState(() {
+      bluetoothGranted = bluetooth.isGranted && scan.isGranted;
+      cameraGranted = camera.isGranted;
+      locationGranted = location.isGranted;
+    });
+    if (bluetoothGranted && cameraGranted && locationGranted) {
+      _openSearch();
+    }
+  }
+
+  void _openSearch() {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SearchPage(toggleTheme: widget.toggleTheme),
+      ),
+    );
+  }
+
   //camera
-      Future<void> requestCameraPermission() async {
-      final status = await Permission.camera.request();
+  Future<void> requestCameraPermission() async {
+    final status = await Permission.camera.request();
 
-      if (status.isGranted) {
-        setState(() => cameraGranted = true);
-      } else if (status.isDenied) {
-        // ask again or show a message
-      } else if (status.isPermanentlyDenied) {
-        // user said never ask again, send them to settings
-        openAppSettings();
-      }
+    if (status.isGranted) {
+      setState(() => cameraGranted = true);
+    } else if (status.isDenied) {
+      // ask again or show a message
+    } else if (status.isPermanentlyDenied) {
+      // user said never ask again, send them to settings
+      openAppSettings();
     }
+  }
 
-    //bluetooth
-    Future<void> requestBluetoothPermissions() async {
-      final statuses = await [
-        Permission.bluetooth,
-        Permission.bluetoothConnect,
-        Permission.bluetoothScan,
-      ].request();
+  //bluetooth
+  Future<void> requestBluetoothPermissions() async {
+    final statuses = await [
+      Permission.bluetooth,
+      Permission.bluetoothConnect,
+      Permission.bluetoothScan,
+    ].request();
 
-      if (statuses.values.every((status) => status.isGranted)) {
-                setState(() => bluetoothGranted = true);
-      } else if (statuses.values.any((status) => status.isPermanentlyDenied)) {
-        openAppSettings();
-      }
+    if (statuses.values.every((status) => status.isGranted)) {
+      setState(() => bluetoothGranted = true);
+    } else if (statuses.values.any((status) => status.isPermanentlyDenied)) {
+      openAppSettings();
     }
+  }
 
-    //location/wifi
-    Future<void> requestLocationPermission() async {
-      final status = await Permission.location.request();
+  //location/wifi
+  Future<void> requestLocationPermission() async {
+    final status = await Permission.location.request();
 
-      if (status.isGranted) {
-            setState(() => locationGranted = true);
-      } else if (status.isPermanentlyDenied) {
-        openAppSettings();
-      }
+    if (status.isGranted) {
+      setState(() => locationGranted = true);
+    } else if (status.isPermanentlyDenied) {
+      openAppSettings();
     }
-//UI
+  }
+
+  //UI
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -70,10 +101,10 @@ class _InitialPairPermissionsState extends State<InitialPairPermissions> {
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-        
+
           children: [
             Padding(
-              padding: const EdgeInsets.only(top:71, left: 40),
+              padding: const EdgeInsets.only(top: 71, left: 40),
               child: Text(
                 "Allow access",
                 style: TextStyle(
@@ -84,9 +115,9 @@ class _InitialPairPermissionsState extends State<InitialPairPermissions> {
                 ),
               ),
             ),
-        
+
             Padding(
-              padding: const EdgeInsets.only(left: 40, right:40),
+              padding: const EdgeInsets.only(left: 40, right: 40),
               child: Text(
                 "Wavelet needs a couple of permissions to find and connect to your speaker.",
                 style: TextStyle(
@@ -97,77 +128,74 @@ class _InitialPairPermissionsState extends State<InitialPairPermissions> {
                 ),
               ),
             ),
-        
-        SizedBox(height:50),  
-        
+
+            SizedBox(height: 50),
+
             Padding(
-        padding: const EdgeInsets.only(left:40, right: 40),
-        child: PermissionCard(
-          permissionName: "Bluetooth",
-          permissionDescription: "Required to discover and pair your Wavelet speaker nearby.",
-          icon: Icons.bluetooth,
-          permissionState: bluetoothGranted,
-          onAllow: () => requestBluetoothPermissions(),
-        ),
+              padding: const EdgeInsets.only(left: 40, right: 40),
+              child: PermissionCard(
+                permissionName: "Bluetooth",
+                permissionDescription:
+                    "Required to discover and pair your Wavelet speaker nearby.",
+                icon: Icons.bluetooth,
+                permissionState: bluetoothGranted,
+                onAllow: () => requestBluetoothPermissions(),
+              ),
             ),
-        
-            SizedBox(height: 25.81,),
-        
-          Padding(
-        padding: const EdgeInsets.only(left:40, right: 40),
-            child: PermissionCard(
-        permissionName: "Local Network",
-        permissionDescription: "Lets Wavelet connect to your Wi-Fi and stream music at home.",
-        icon: Icons.wifi,
-        permissionState: locationGranted,
-        onAllow: () => requestLocationPermission(),
+
+            SizedBox(height: 25.81),
+
+            Padding(
+              padding: const EdgeInsets.only(left: 40, right: 40),
+              child: PermissionCard(
+                permissionName: "Local Network",
+                permissionDescription:
+                    "Lets Wavelet connect to your Wi-Fi and stream music at home.",
+                icon: Icons.wifi,
+                permissionState: locationGranted,
+                onAllow: () => requestLocationPermission(),
+              ),
             ),
-          ),
-        
-            SizedBox(height: 25.81,),
-        
-          Padding(
-        padding: const EdgeInsets.only(left:40, right: 40),
-            child: PermissionCard(
-        permissionName: "Camera",
-        permissionDescription: "Required to scan the QR code on your Wavelet speaker.",
-        icon: Icons.camera_alt,
-        permissionState: cameraGranted,
-        onAllow: () => requestCameraPermission(),
+
+            SizedBox(height: 25.81),
+
+            Padding(
+              padding: const EdgeInsets.only(left: 40, right: 40),
+              child: PermissionCard(
+                permissionName: "Camera",
+                permissionDescription:
+                    "Required to scan the QR code on your Wavelet speaker.",
+                icon: Icons.camera_alt,
+                permissionState: cameraGranted,
+                onAllow: () => requestCameraPermission(),
+              ),
             ),
-          ),
-        
-            SizedBox(height: 79.81,),
-        
+
+            SizedBox(height: 79.81),
+
             Center(child: FiveStepNavigation(position: 1)),
-        
-        //only progress once all three perms are granted
-        if (bluetoothGranted && cameraGranted && locationGranted)
-          Center(
-            child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: ElevatedButton(
-          onPressed: () {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => SearchPage(toggleTheme: () {
-              
-            },) ));
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: WaveletColors.primaryButton(context),
-            foregroundColor: WaveletColors.primaryButtonText(context),
-            minimumSize: Size(294, 52),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-          child: Text("Continue"),
-        ),
-            ),
-          ),
-        
-        
-        
-        
+
+            //only progress once all three perms are granted
+            if (bluetoothGranted && cameraGranted && locationGranted)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      _openSearch();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: WaveletColors.primaryButton(context),
+                      foregroundColor: WaveletColors.primaryButtonText(context),
+                      minimumSize: Size(294, 52),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: Text("Continue"),
+                  ),
+                ),
+              ),
           ], //end of column
         ),
       ),
